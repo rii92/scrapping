@@ -6,6 +6,28 @@ import puppeteerExtra from "puppeteer-extra";
 // Puppeteer Plugin to prevent detection
 import stealthPlugin from "puppeteer-extra-plugin-stealth";
 
+// for handle input from other file
+import { promises as fs } from 'fs';
+
+// Path to your CSV file
+const filePath = 'data/data.csv';
+
+// Define the path to the CSV file and set the headers
+async function appendDataToCsv(filePath, records) {
+    // Check if the file exists
+    try {
+      await fs.access(filePath);
+    } catch (error) {
+      // If the file does not exist, write the headers first
+      const headers = Object.keys(records[0]).join(';') + '\n';
+      await fs.writeFile(filePath, headers);
+    }
+  
+    // Append each record to the CSV file
+    const recordsCsv = records.map(record => Object.values(record).join(';')).join('\n');
+    await fs.appendFile(filePath, recordsCsv + '\n');
+}
+
 async function getGoogleMapsData() {
 
     // Use plugin 
@@ -14,7 +36,7 @@ async function getGoogleMapsData() {
     // Launch browser
     const browser = await puppeteerExtra.launch({ headless: false }); // headless false to show the window
     const page = await browser.newPage();
-    const query = "coffee shop di jakarta";
+    const query = "sd di kabupaten sanggau";
 
     try {
   
@@ -101,6 +123,10 @@ async function getGoogleMapsData() {
                 ratingText,
             });
         });
+
+        appendDataToCsv(filePath, business)
+        .then(() => console.log('Data appended to CSV successfully'))
+        .catch(err => console.error('Error appending data to CSV', err));
 
         console.log(business);
         return business;
